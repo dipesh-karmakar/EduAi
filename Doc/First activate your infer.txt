@@ -1,0 +1,42 @@
+First, activate your infer-venv environment and make sure the hf download tool
+is installed:
+
+source /home/basilisk/Project_EduAi/Source/EduAi/infer-venv/bin/activate
+pip install -U 'huggingface_hub[cli]'
+
+Now run these downloads one by one:
+
+1. Download Qwen3-VL 8B (chat + vision, ~6 GB)
+
+hf download Qwen/Qwen3-VL-8B-Instruct-GGUF \
+  --include '*Q4_K_M.gguf' \
+  --include 'mmproj*F16.gguf' \
+  --local-dir /home/basilisk/Project_EduAi/Source/EduAi/models/qwen3-vl-8b
+
+2. Download Qwen3 0.6B (tiny "free GPU" model, ~0.6 GB)
+
+hf download Qwen/Qwen3-0.6B-GGUF \
+  --include '*Q8_0.gguf' \
+  --local-dir /home/basilisk/Project_EduAi/Source/EduAi/models/qwen3-0.6b
+
+3. Find and download bge-m3 GGUF (~1.2 GB)
+
+The guide does not name a specific repo for the GGUF build of bge-m3, so search
+Hugging Face for the most-downloaded ones right from your terminal:
+
+python -c "from huggingface_hub import HfApi; print('\n'.join(m.id for m in HfApi().list_models(search='bge-m3 gguf', sort='downloads', limit=5)))"
+
+Pick one from the top results (or check them on huggingface.co), check its file
+name if needed, and download its Q8_0 file:
+
+mkdir -p /home/basilisk/Project_EduAi/Source/EduAi/models/bge-m3
+hf download PASTE_REPO_ID_HERE \
+  --include '*[Qq]8_0*.gguf' \
+  --local-dir /home/basilisk/Project_EduAi/Source/EduAi/models/bge-m3
+
+Once all three finish, run:
+
+ls -R /home/basilisk/Project_EduAi/Source/EduAi/models/
+
+and paste the output here so we can write models.json with the exact filenames!
+

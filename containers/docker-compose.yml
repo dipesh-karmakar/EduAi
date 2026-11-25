@@ -1,0 +1,38 @@
+name: eduai
+
+services:
+  searxng:
+    image: searxng/searxng
+    container_name: searxng
+    restart: unless-stopped
+    volumes:
+      - ../searxng:/etc/searxng
+    ports:
+      - 127.0.0.1:8888:8080
+
+  qdrant:
+    image: qdrant/qdrant
+    container_name: qdrant
+    restart: unless-stopped
+    volumes:
+      - ../data/qdrant:/qdrant/storage
+    ports:
+      - 127.0.0.1:6333:6333
+
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: open-webui
+    restart: unless-stopped
+    ports:
+      - 3000:8080
+    volumes:
+      - ../data/openwebui:/app/backend/data
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    environment:
+      - ENABLE_OLLAMA_API=false
+      - OPENAI_API_BASE_URL=http://host.docker.internal:9000/v1
+      - OPENAI_API_KEY=sk-local
+      - ENABLE_TITLE_GENERATION=false
+      - ENABLE_TAGS_GENERATION=false
+      - ENABLE_AUTOCOMPLETE_GENERATION=false

@@ -1,0 +1,11 @@
+# searxng settings
+
+use_default_settings: true
+server:
+  secret_key: '74c8544e99139a1228415c2826591bb2535d2a9861c07f13a79004e3ba1809e0'
+  limiter: false
+search:
+  safe_search: 2
+  formats:
+    - html
+    - json

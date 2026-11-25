@@ -1,0 +1,34 @@
+{
+  "host": "0.0.0.0",
+  "port": 8000,
+  "models": [
+    {
+      "model": "./models/qwen3-vl-8b/Qwen3VL-8B-Instruct-Q4_K_M.gguf",
+      "model_alias": "chat",
+      "chat_format": "qwen3-vl",
+      "clip_model_path": "./models/qwen3-vl-8b/mmproj-Qwen3VL-8B-Instruct-F16.gguf",
+      "n_gpu_layers": -1,
+      "n_ctx": 8192,
+      "flash_attn_type": 1
+    },
+    {
+      "model": "./models/qwen3-14b/Qwen3-14B-Q4_K_M.gguf",
+      "model_alias": "deep",
+      "n_gpu_layers": -1,
+      "n_ctx": 8192,
+      "flash_attn_type": 1
+    },
+    {
+      "model": "./models/bge-m3/bge-m3-q8_0.gguf",
+      "model_alias": "embeddings",
+      "embeddings": true,
+      "n_gpu_layers": -1
+    },
+    {
+      "model": "./models/qwen3-0.6b/Qwen3-0.6B-Q8_0.gguf",
+      "model_alias": "free",
+      "n_gpu_layers": 0,
+      "n_ctx": 512
+    }
+  ]
+}
