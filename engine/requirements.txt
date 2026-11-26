@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+httpx
+pyyaml
+qdrant-client
+trafilatura
+simpleeval
+textstat
+pypdf
+requests

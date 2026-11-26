@@ -36,3 +36,25 @@ services:
       - ENABLE_TITLE_GENERATION=false
       - ENABLE_TAGS_GENERATION=false
       - ENABLE_AUTOCOMPLETE_GENERATION=false
+
+  infer:
+    build: ../infer
+    container_name: infer
+    restart: unless-stopped
+    gpus: all
+    volumes:
+      - ../infer:/app/infer:ro
+      - ../models:/app/models:ro
+    ports:
+      - 127.0.0.1:8000:8000
+
+  comfyui:
+    build: ../comfyUI
+    container_name: comfyui
+    restart: unless-stopped
+    gpus: all
+    volumes:
+      - ../models/comfyui:/app/models
+      - ../data/comfyui-output:/app/output
+    ports:
+      - 127.0.0.1:8188:8188

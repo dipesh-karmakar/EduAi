@@ -20,7 +20,7 @@
     },
     {
       "model": "./models/bge-m3/bge-m3-q8_0.gguf",
-      "model_alias": "embeddings",
+      "model_alias": "embedding",
       "embeddings": true,
       "n_gpu_layers": -1
     },
