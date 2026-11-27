@@ -4,16 +4,19 @@ import llama_cpp.server.model as server_model
 from llama_cpp.llama_chat_format import Qwen3VLChatHandler
 from llama_cpp.server.__main__ import main
 
+_orig_create_chat_completion = llama_cpp.Llama.create_chat_completion
 
-class SafeQwen3VLChatHandler(Qwen3VLChatHandler):
-    def __call__(self, *args, **kwargs):
-        res = super().__call__(*args, **kwargs)
-        if isinstance(res, dict) and "choices" in res:
-            for choice in res["choices"]:
-                if isinstance(choice, dict) and isinstance(choice.get("message"), dict):
-                    choice["message"].setdefault("refusal", None)
-        return res
 
+def _safe_create_chat_completion(self, *args, **kwargs):
+    res = _orig_create_chat_completion(self, *args, **kwargs)
+    if isinstance(res, dict) and "choices" in res:
+        for choice in res["choices"]:
+            if isinstance(choice, dict) and isinstance(choice.get("message"), dict):
+                choice["message"].setdefault("refusal", None)
+    return res
+
+
+llama_cpp.Llama.create_chat_completion = _safe_create_chat_completion
 
 _BaseLlamaProxy = server_model.LlamaProxy
 _orig_load = _BaseLlamaProxy.load_llama_from_model_settings
@@ -24,7 +27,7 @@ class CustomLlamaProxy(_BaseLlamaProxy):
     def load_llama_from_model_settings(settings):
         if settings.chat_format == "qwen3-vl":
             assert settings.clip_model_path is not None, "clip model not found"
-            handler = SafeQwen3VLChatHandler(
+            handler = Qwen3VLChatHandler(
                 clip_model_path=settings.clip_model_path,
                 verbose=settings.verbose,
             )

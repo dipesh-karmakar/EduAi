@@ -15,7 +15,7 @@
       "model": "./models/qwen3-14b/Qwen3-14B-Q4_K_M.gguf",
       "model_alias": "deep",
       "n_gpu_layers": -1,
-      "n_ctx": 8192,
+      "n_ctx": 4096,
       "flash_attn_type": 1
     },
     {

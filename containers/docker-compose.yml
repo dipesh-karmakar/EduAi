@@ -31,11 +31,12 @@ services:
       - host.docker.internal:host-gateway
     environment:
       - ENABLE_OLLAMA_API=false
-      - OPENAI_API_BASE_URL=http://host.docker.internal:9000/v1
       - OPENAI_API_KEY=sk-local
       - ENABLE_TITLE_GENERATION=false
       - ENABLE_TAGS_GENERATION=false
       - ENABLE_AUTOCOMPLETE_GENERATION=false
+      - ENABLE_PERSISTENT_CONFIG=false
+      - OPENAI_API_BASE_URL=http://engine:9000/v1
 
   infer:
     build: ../infer
@@ -58,3 +59,19 @@ services:
       - ../data/comfyui-output:/app/output
     ports:
       - 127.0.0.1:8188:8188
+
+  engine:
+    build: ../engine
+    container_name: engine
+    restart: unless-stopped
+    volumes:
+      - ../engine:/app
+      - ../workflows:/app/workflows:ro
+    ports:
+      - 127.0.0.1:9000:9000
+    depends_on:
+      - infer
+      - qdrant
+      - searxng
+      - comfyui
+

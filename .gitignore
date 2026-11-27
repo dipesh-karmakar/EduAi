@@ -32,4 +32,3 @@ secret.key
 
 # Open WebUI
 data/openwebui/cache/
-data/openwebui/vector_db/chroma.sqlite3
