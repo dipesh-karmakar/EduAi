@@ -1,4 +1,7 @@
-# Welcome to the EduAi wiki!
+# Welcome to the EduAi
+
+This app is a self-hosted, open-source AI tutor designed to answer educational questions for students.
+It runs completely locally on a single mid-range PC (specifically tuned for Ubuntu 24.04 with an NVIDIA RTX 3060 12 GB GPU) without relying on paid cloud AI APIs like ChatGPT or Claude.
 
 ## A. Git Setup (Git Wiki – Initial Setup & Daily Synchronization)
 
