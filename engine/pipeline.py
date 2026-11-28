@@ -6,7 +6,7 @@
 # - 374a71c: Added caches, image timeouts, and zero-sample verifier skipping.
 # - 3898fb9: Optimized pipeline concurrency and added request timeouts.
 # - f9dc837: Added the initial tutor pipeline.
-# - Uncommitted: Passes the planned subject to textbook retrieval.
+# - Uncommitted: Passes the planned subject to retrieval and prevents unwanted images.
 
 import logging
 from collections import OrderedDict
@@ -58,6 +58,32 @@ async def safe(coro, default):
         # Log component failures while letting the rest of the answer pipeline continue.
         log.warning('component failed: %s', err)
         return default
+
+
+_PICTURE_TERMS = r'(?:images?|pictures?|illustrations?|diagrams?|maps?|charts?)'
+_NO_PICTURE_PATTERNS = (
+    rf'\b(?:do not|don\'t|dont|never|no need to|not to)\s+'
+    rf'(?:generate|create|draw|make|produce|illustrate|show|include)\b[^.!?\n]{{0,80}}\b{_PICTURE_TERMS}\b',
+    rf'\bwithout\s+(?:generating|creating|drawing|making|illustrating|showing|including)\b'
+    rf'[^.!?\n]{{0,80}}\b{_PICTURE_TERMS}\b',
+    rf'\bno\s+{_PICTURE_TERMS}\b',
+    rf'\b(?:i\s+)?(?:do not|don\'t|dont)\s+want\b[^.!?\n]{{0,80}}\b{_PICTURE_TERMS}\b',
+)
+_PICTURE_REQUEST_PATTERN = (
+    rf'\b(?:draw|generate|create|make|produce|illustrate|show|include)\b'
+    rf'[^.!?\n]{{0,80}}\b{_PICTURE_TERMS}\b'
+)
+
+
+def _wants_picture(job, plan, draft):
+    user_text = ' '.join((job.get('text') or '').split())
+    # Explicit user opt-outs take precedence over both model-generated flags.
+    if any(re.search(pattern, user_text, flags=re.IGNORECASE) for pattern in _NO_PICTURE_PATTERNS):
+        return False
+    if job.get('images'):
+        # An uploaded image is context, not permission to generate a second image.
+        return bool(re.search(_PICTURE_REQUEST_PATTERN, user_text, flags=re.IGNORECASE))
+    return bool(plan.get('wants_picture') or draft.get('needs_picture'))
 
 
 def format_reply(draft, evidence, picture, report):
@@ -115,11 +141,11 @@ async def run(job, parts, config):
             draft = await llm.answer(question, style, evidence, '; '.join(report['notes']))
     # 6: draw a picture only after all LLM work is complete
     picture = None
-    wants = plan['wants_picture'] or draft.get('needs_picture')
+    wants = _wants_picture(job, plan, draft)
     if wants and 'imagegen' in parts:
         yield 'status', 'Drawing a picture...'
         picture = await llm.with_gpu_released(parts['imagegen'].generate(draft.get('picture_prompt') or question))
-    elif plan['wants_picture']:
+    elif plan['wants_picture'] and wants:
         draft['answer'] += '\n\n(Picture generation is switched off.)'
     # 7: reply
     reply = format_reply(draft, evidence, picture, report)

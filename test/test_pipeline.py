@@ -2,7 +2,7 @@
 # Author: Dipesh Karmakar <dipesh.karmakar@gmail.com>
 # Modifications:
 # - 433859a: Added unit tests for the retriever and pipeline.
-# - Uncommitted: Added subject-routing coverage and moved tests into ./test.
+# - Uncommitted: Added subject-routing and unwanted-image regression coverage.
 
 import sys
 import unittest
@@ -10,7 +10,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'engine'))
 
-from pipeline import run
+from pipeline import _wants_picture, run
 
 
 # These fakes isolate subject routing from model and database services.
@@ -35,6 +35,33 @@ class FakeRetriever:
         return []
 
 
+class FakeImageQuestionLLM(FakeLLM):
+    async def read_picture(self, images, text):
+        return 'Explain this picture.'
+
+    async def plan(self, question):
+        return {
+            'subject': 'science',
+            'wants_picture': True,
+            'needs_current_facts': False,
+        }
+
+    async def answer(self, question, style, evidence):
+        return {'answer': 'This picture shows a plant.', 'confident': True, 'needs_picture': True}
+
+    async def with_gpu_released(self, operation):
+        return await operation
+
+
+class FakeImageGen:
+    def __init__(self):
+        self.prompts = []
+
+    async def generate(self, prompt):
+        self.prompts.append(prompt)
+        return 'generated-image'
+
+
 class PipelineSubjectRoutingTests(unittest.IsolatedAsyncioTestCase):
     async def test_passes_planned_subject_to_retriever(self):
         retriever = FakeRetriever()
@@ -50,6 +77,53 @@ class PipelineSubjectRoutingTests(unittest.IsolatedAsyncioTestCase):
             retriever.args,
             ('Test subject routing for physics', 'class-9-12', 'physics'),
         )
+
+
+class PipelineUploadedImageTests(unittest.IsolatedAsyncioTestCase):
+    async def test_explaining_uploaded_image_does_not_generate_another_image(self):
+        imagegen = FakeImageGen()
+        job = {'text': 'Explain this picture', 'images': ['uploaded-image'], 'level': 'class-9-12'}
+        parts = {'llm': FakeImageQuestionLLM(), 'imagegen': imagegen}
+        config = {'levels': {'class-9-12': 'Use suitable detail.'}}
+
+        events = [event async for event in run(job, parts, config)]
+
+        self.assertEqual(imagegen.prompts, [])
+        self.assertFalse(any(value == 'Drawing a picture...' for kind, value in events if kind == 'status'))
+
+
+class PictureGenerationDecisionTests(unittest.TestCase):
+    def test_uploaded_image_does_not_trigger_a_supplementary_image(self):
+        job = {'text': 'Explain this picture', 'images': ['uploaded-image']}
+        plan = {'wants_picture': False}
+        draft = {'needs_picture': True}
+
+        self.assertFalse(_wants_picture(job, plan, draft))
+
+    def test_explicit_no_image_instruction_overrides_model_flags(self):
+        plan = {'wants_picture': True}
+        draft = {'needs_picture': True}
+        prompts = (
+            'Please do not generate any image.',
+            "I don't want a picture.",
+            'No images, please.',
+            'I asked not to generate any image.',
+            'Without generating an image, explain the answer.',
+        )
+        for prompt in prompts:
+            with self.subTest(prompt=prompt):
+                job = {'text': prompt, 'images': ['uploaded-image']}
+                self.assertFalse(_wants_picture(job, plan, draft))
+
+    def test_uploaded_image_can_still_request_a_new_diagram(self):
+        job = {'text': 'Draw a diagram to explain this problem.', 'images': ['uploaded-image']}
+
+        self.assertTrue(_wants_picture(job, {'wants_picture': False}, {'needs_picture': False}))
+
+    def test_text_only_auto_picture_behavior_is_preserved(self):
+        job = {'text': 'Explain photosynthesis', 'images': []}
+
+        self.assertTrue(_wants_picture(job, {'wants_picture': False}, {'needs_picture': True}))
 
 
 if __name__ == '__main__':
