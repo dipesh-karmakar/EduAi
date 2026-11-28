@@ -95,14 +95,10 @@ class PipelineUploadedImageTests(unittest.IsolatedAsyncioTestCase):
 class PictureGenerationDecisionTests(unittest.TestCase):
     def test_uploaded_image_does_not_trigger_a_supplementary_image(self):
         job = {'text': 'Explain this picture', 'images': ['uploaded-image']}
-        plan = {'wants_picture': False}
-        draft = {'needs_picture': True}
 
-        self.assertFalse(_wants_picture(job, plan, draft))
+        self.assertFalse(_wants_picture(job))
 
     def test_explicit_no_image_instruction_overrides_model_flags(self):
-        plan = {'wants_picture': True}
-        draft = {'needs_picture': True}
         prompts = (
             'Please do not generate any image.',
             "I don't want a picture.",
@@ -112,18 +108,23 @@ class PictureGenerationDecisionTests(unittest.TestCase):
         )
         for prompt in prompts:
             with self.subTest(prompt=prompt):
-                job = {'text': prompt, 'images': ['uploaded-image']}
-                self.assertFalse(_wants_picture(job, plan, draft))
+                job = {'text': prompt, 'images': []}
+                self.assertFalse(_wants_picture(job))
 
     def test_uploaded_image_can_still_request_a_new_diagram(self):
         job = {'text': 'Draw a diagram to explain this problem.', 'images': ['uploaded-image']}
 
-        self.assertTrue(_wants_picture(job, {'wants_picture': False}, {'needs_picture': False}))
+        self.assertTrue(_wants_picture(job))
 
-    def test_text_only_auto_picture_behavior_is_preserved(self):
+    def test_text_only_model_flags_do_not_trigger_unsolicited_picture(self):
         job = {'text': 'Explain photosynthesis', 'images': []}
 
-        self.assertTrue(_wants_picture(job, {'wants_picture': False}, {'needs_picture': True}))
+        self.assertFalse(_wants_picture(job))
+
+    def test_explicit_text_only_picture_request_triggers_generation(self):
+        job = {'text': 'Please draw a diagram of photosynthesis.', 'images': []}
+
+        self.assertTrue(_wants_picture(job))
 
 
 if __name__ == '__main__':

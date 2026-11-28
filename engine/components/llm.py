@@ -107,7 +107,7 @@ class LLM:
             + style
             + ' Use the numbered sources when they help and cite them like [1]. '
             + 'If the sources do not contain the answer and you are not sure, set confident to false. '
-            + 'Set needs_picture to true only if a picture would clearly help, and then write picture_prompt. '
+            + 'Set needs_picture to true only if the student explicitly requested a new picture or diagram, and then write picture_prompt. '
             + 'For picture prompts, describe a clear, uncluttered composition with accurate visual relationships. Do not request text, labels, lettering, or watermarks in the image; put necessary labels in the written answer instead. '
             + 'When image generation is available, do not say you cannot draw or generate images. '
             + 'If the answer is a calculation, put the final calculation in final_expression as a plain expression with numbers only.'

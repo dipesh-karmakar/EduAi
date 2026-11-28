@@ -20,6 +20,12 @@ parts = load(config)
 app = FastAPI()
 PREFIX = 'tutor-'
 log = logging.getLogger('engine')
+log.setLevel(logging.INFO)
+if not log.handlers:
+    handler = logging.StreamHandler()
+    handler.setFormatter(logging.Formatter('%(levelname)s %(name)s: %(message)s'))
+    log.addHandler(handler)
+    log.propagate = False
 
 
 @app.get('/v1/models')
@@ -59,7 +65,7 @@ async def chat(request: Request):
     if level not in config['levels']:
         level = 'class-9-12'
     text, images = split_message(body['messages'])
-    job = {'text': text, 'images': images, 'level': level}
+    job = {'request_id': uuid.uuid4().hex[:12], 'text': text, 'images': images, 'level': level}
 
     async def stream():
         yield chunk(model, {'role': 'assistant'})
