@@ -44,7 +44,7 @@ for i in range(0, len(pieces), 32):
                 'text': text,
                 'page': page_no,
                 'level': level,
-                'subject': subject,
+                'subject': subject.strip().casefold(),
                 'source': path.split('/')[-1],
             },
         )

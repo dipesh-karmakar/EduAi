@@ -80,7 +80,7 @@ async def run(job, parts, config):
     if 'retriever' in parts:
         yield 'status', 'Looking in the textbooks...'
     plan = await safe(llm.plan(question), {'subject': '', 'wants_picture': False, 'needs_current_facts': False})
-    evidence = await safe(parts['retriever'].search(question, level), []) if 'retriever' in parts else []
+    evidence = await safe(parts['retriever'].search(question, level, plan.get('subject')), []) if 'retriever' in parts else []
     # 3: answer from what it knows
     draft = await llm.answer(question, style, evidence)
     # 4: search the internet, only if needed

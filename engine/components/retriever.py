@@ -18,7 +18,7 @@ class Retriever:
         self._embedding_cache = OrderedDict()
         self._embedding_cache_limit = 256
 
-    async def search(self, question, level):
+    async def search(self, question, level, subject=None):
         if self._collection_exists is None:
             self._collection_exists = await self.qdrant.collection_exists(self.collection)
         if not self._collection_exists:
@@ -36,11 +36,31 @@ class Retriever:
                 self._embedding_cache.popitem(last=False)
         else:
             self._embedding_cache.move_to_end(cache_key)
-        only_level = Filter(must=[FieldCondition(key='level', match=MatchValue(value=level))])
-        result = await self.qdrant.query_points(self.collection, query=vector, query_filter=only_level, limit=self.top_k)
+
+        level_condition = FieldCondition(key='level', match=MatchValue(value=level))
+        subject = subject.strip().casefold() if isinstance(subject, str) else ''
+        if subject:
+            subject_filter = Filter(must=[
+                level_condition,
+                FieldCondition(key='subject', match=MatchValue(value=subject)),
+            ])
+            result = await self.qdrant.query_points(
+                self.collection, query=vector, query_filter=subject_filter, limit=self.top_k
+            )
+            evidence = self._format_points(result.points)
+            if evidence:
+                return evidence
+
+        level_filter = Filter(must=[level_condition])
+        result = await self.qdrant.query_points(
+            self.collection, query=vector, query_filter=level_filter, limit=self.top_k
+        )
+        return self._format_points(result.points)
+
+    def _format_points(self, points):
         return [
             {'source': h.payload['source'] + ' p.' + str(h.payload['page']), 'text': h.payload['text'], 'score': h.score}
-            for h in result.points
+            for h in points
             if h.score >= self.min_score
         ]
 
