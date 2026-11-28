@@ -1,3 +1,9 @@
+# Description: Adds Qwen3-VL compatibility hooks to the llama.cpp inference server.
+# Author: Dipesh Karmakar <dipesh.karmakar@gmail.com>
+# Modifications:
+# - f9dc837: Added the inference, tutor, retrieval, search, verifier, and image components.
+# - 130fab8: Added the inference server and container setup.
+
 import llama_cpp
 import llama_cpp.server.app as server_app
 import llama_cpp.server.model as server_model

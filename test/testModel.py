@@ -1,3 +1,8 @@
+# Description: Runs a manual local llama.cpp model inference check.
+# Author: Dipesh Karmakar <dipesh.karmakar@gmail.com>
+# Modifications:
+# - a25ef17: Added the initial project files and tested inference.
+
 import glob
 from llama_cpp import Llama
 

@@ -1,3 +1,8 @@
+# Description: Builds the CUDA-enabled llama.cpp inference server.
+# Author: Dipesh Karmakar <dipesh.karmakar@gmail.com>
+# Modifications:
+# - 130fab8: Added the initial inference container build.
+
 FROM nvidia/cuda:12.6.3-devel-ubuntu24.04
 
 ENV DEBIAN_FRONTEND=noninteractive

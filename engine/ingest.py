@@ -1,3 +1,10 @@
+# Description: Chunks textbooks, creates embeddings, and stores them in Qdrant.
+# Author: Dipesh Karmakar <dipesh.karmakar@gmail.com>
+# Modifications:
+# - 433859a: Normalized ingested subject labels.
+# - 130fab8: Added the initial textbook ingestion script.
+# - Uncommitted: Normalizes ingested subject labels for consistent filtering.
+
 # ingest.py: python ingest.py book.pdf class-9-12 physics
 import os
 import sys

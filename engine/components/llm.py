@@ -1,3 +1,9 @@
+# Description: Provides serialized chat, planning, and GPU-release model requests.
+# Author: Dipesh Karmakar <dipesh.karmakar@gmail.com>
+# Modifications:
+# - 7de329d: Serialized inference and added image-generation prompt guidance.
+# - f9dc837: Added the initial language-model component.
+
 import asyncio
 import json
 import re

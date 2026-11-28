@@ -1,3 +1,10 @@
+# Description: Defines the EduAI services and their local data/model mounts.
+# Author: Dipesh Karmakar <dipesh.karmakar@gmail.com>
+# Modifications:
+# - f9dc837: Added the initial multi-service application setup.
+# - 130fab8: Added inference and image-generation services.
+# - a25ef17: Added the initial project deployment configuration.
+
 name: eduai
 
 services:

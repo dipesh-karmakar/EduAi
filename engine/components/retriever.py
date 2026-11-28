@@ -1,3 +1,12 @@
+# Description: Retrieves level- and subject-relevant textbook passages from Qdrant.
+# Author: Dipesh Karmakar <dipesh.karmakar@gmail.com>
+# Modifications:
+# - 433859a: Added subject filtering with a grade-only fallback.
+# - 7de329d: Serialized embedding requests with chat inference.
+# - 374a71c: Added an embedding cache.
+# - f9dc837: Added the initial textbook retriever.
+# - Uncommitted: Added subject filtering with a grade-only fallback.
+
 import httpx
 from collections import OrderedDict
 from qdrant_client import AsyncQdrantClient

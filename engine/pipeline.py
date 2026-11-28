@@ -1,3 +1,13 @@
+# Description: Orchestrates tutoring, retrieval, web search, verification, and images.
+# Author: Dipesh Karmakar <dipesh.karmakar@gmail.com>
+# Modifications:
+# - 433859a: Passed the planned subject to textbook retrieval.
+# - 7de329d: Serialized model requests and handled image-service failures.
+# - 374a71c: Added caches, image timeouts, and zero-sample verifier skipping.
+# - 3898fb9: Optimized pipeline concurrency and added request timeouts.
+# - f9dc837: Added the initial tutor pipeline.
+# - Uncommitted: Passes the planned subject to textbook retrieval.
+
 import logging
 from collections import OrderedDict
 import time

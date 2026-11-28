@@ -1,3 +1,10 @@
+# Description: Searches the web and extracts text from relevant result pages.
+# Author: Dipesh Karmakar <dipesh.karmakar@gmail.com>
+# Modifications:
+# - 374a71c: Added a search cache and bounded web-page retrieval.
+# - 3898fb9: Parallelized page retrieval and added timeouts.
+# - f9dc837: Added the initial web-search component.
+
 import httpx
 import trafilatura
 import asyncio

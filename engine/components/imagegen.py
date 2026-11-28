@@ -1,3 +1,10 @@
+# Description: Submits image workflows to ComfyUI and returns generated images.
+# Author: Dipesh Karmakar <dipesh.karmakar@gmail.com>
+# Modifications:
+# - 7de329d: Added image prompt guidance and GPU/model handoff support.
+# - 3898fb9: Added bounded image-generation polling.
+# - f9dc837: Added the initial ComfyUI image-generation component.
+
 import asyncio
 import base64
 import json

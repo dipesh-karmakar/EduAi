@@ -1,3 +1,8 @@
+# Description: Builds and runs the Python tutoring API.
+# Author: Dipesh Karmakar <dipesh.karmakar@gmail.com>
+# Modifications:
+# - 130fab8: Added the initial engine container build.
+
 FROM python:3.12-slim
 
 WORKDIR /app

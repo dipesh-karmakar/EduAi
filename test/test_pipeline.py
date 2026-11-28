@@ -1,3 +1,9 @@
+# Description: Tests that the planner's subject is routed to textbook retrieval.
+# Author: Dipesh Karmakar <dipesh.karmakar@gmail.com>
+# Modifications:
+# - 433859a: Added unit tests for the retriever and pipeline.
+# - Uncommitted: Added subject-routing coverage and moved tests into ./test.
+
 import sys
 import unittest
 from pathlib import Path

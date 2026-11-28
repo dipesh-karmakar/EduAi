@@ -1,3 +1,9 @@
+# Description: Checks answer calculations, source support, and reading level.
+# Author: Dipesh Karmakar <dipesh.karmakar@gmail.com>
+# Modifications:
+# - 3898fb9: Skipped repeated-answer checks when the sample count is zero.
+# - f9dc837: Added the initial answer verifier.
+
 import math
 import re
 import textstat

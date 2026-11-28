@@ -1,3 +1,8 @@
+# Description: Loads enabled engine components from configuration.
+# Author: Dipesh Karmakar <dipesh.karmakar@gmail.com>
+# Modifications:
+# - f9dc837: Added dynamic component loading.
+
 import importlib
 
 

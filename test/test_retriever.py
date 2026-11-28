@@ -1,3 +1,9 @@
+# Description: Tests subject-aware textbook retrieval and its grade-only fallback.
+# Author: Dipesh Karmakar <dipesh.karmakar@gmail.com>
+# Modifications:
+# - 433859a: Added unit tests for the retriever and pipeline.
+# - Uncommitted: Added subject-filter and fallback cases; moved tests into ./test.
+
 import sys
 import unittest
 from collections import OrderedDict

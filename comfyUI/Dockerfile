@@ -1,3 +1,9 @@
+# Description: Builds ComfyUI with CUDA-enabled PyTorch and GGUF support.
+# Author: Dipesh Karmakar <dipesh.karmakar@gmail.com>
+# Modifications:
+# - 7de329d: Updated PyTorch to the CUDA 13.0 wheel.
+# - 130fab8: Added the initial ComfyUI container build.
+
 FROM python:3.12-slim
 
 ENV DEBIAN_FRONTEND=noninteractive

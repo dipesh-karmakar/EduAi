@@ -1,3 +1,9 @@
+# Description: Serves the OpenAI-compatible tutoring API and streamed responses.
+# Author: Dipesh Karmakar <dipesh.karmakar@gmail.com>
+# Modifications:
+# - 7de329d: Added explicit streaming and non-streaming service errors.
+# - f9dc837: Added the initial FastAPI engine endpoints.
+
 import json
 import logging
 import time
