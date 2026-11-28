@@ -1,3 +1,4 @@
+import asyncio
 import json
 import re
 import httpx
@@ -21,9 +22,14 @@ class LLM:
         self.base = cfg['base_url']
         self.chat_model = cfg['chat_model']
         self.free_model = cfg['free_model']
+        self.infer_lock = asyncio.Lock()
         self.http = httpx.AsyncClient(timeout=600)
 
     async def complete(self, messages, model=None, schema=None, temperature=0.3, max_tokens=900):
+        async with self.infer_lock:
+            return await self._complete(messages, model, schema, temperature, max_tokens)
+
+    async def _complete(self, messages, model=None, schema=None, temperature=0.3, max_tokens=900):
         body = {
             'model': model or self.chat_model,
             'messages': messages,
@@ -95,6 +101,8 @@ class LLM:
             + ' Use the numbered sources when they help and cite them like [1]. '
             + 'If the sources do not contain the answer and you are not sure, set confident to false. '
             + 'Set needs_picture to true only if a picture would clearly help, and then write picture_prompt. '
+            + 'For picture prompts, describe a clear, uncluttered composition with accurate visual relationships. Do not request text, labels, lettering, or watermarks in the image; put necessary labels in the written answer instead. '
+            + 'When image generation is available, do not say you cannot draw or generate images. '
             + 'If the answer is a calculation, put the final calculation in final_expression as a plain expression with numbers only.'
         )
         user = 'Sources:\n' + sources + '\n\nQuestion: ' + question + ('\n\nFix these problems: ' + notes if notes else '')
@@ -120,8 +128,14 @@ class LLM:
         )
         return str(out.get('final', next(iter(out.values()), '')))
 
-    async def free_gpu(self):
-        await self.complete([{'role': 'user', 'content': 'hi'}], model=self.free_model, max_tokens=1)
+    async def with_gpu_released(self, operation):
+        async with self.infer_lock:
+            await self._complete(
+                [{'role': 'user', 'content': 'hi'}],
+                model=self.free_model,
+                max_tokens=1,
+            )
+            return await operation
 
 
 def build(config, parts):

@@ -1,7 +1,9 @@
 import json
+import logging
 import time
 import uuid
 import yaml
+import httpx
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse, StreamingResponse
 from components import load
@@ -11,6 +13,7 @@ config = yaml.safe_load(open('config.yaml'))
 parts = load(config)
 app = FastAPI()
 PREFIX = 'tutor-'
+log = logging.getLogger('engine')
 
 
 @app.get('/v1/models')
@@ -53,17 +56,37 @@ async def chat(request: Request):
 
     async def stream():
         yield chunk(model, {'role': 'assistant'})
-        async for kind, value in run(job, parts, config):
-            yield chunk(model, {'content': ('_' + value + '_\n\n') if kind == 'status' else value})
+        try:
+            async for kind, value in run(job, parts, config):
+                yield chunk(model, {'content': ('_' + value + '_\n\n') if kind == 'status' else value})
+        except (httpx.HTTPError, TimeoutError):
+            log.exception('streaming chat completion failed')
+            yield 'data: ' + json.dumps({
+                'error': {
+                    'message': 'A model or image service failed while processing this request.',
+                    'type': 'server_error',
+                },
+            }) + '\n\n'
+            yield 'data: [DONE]\n\n'
+            return
         yield chunk(model, {}, 'stop')
         yield 'data: [DONE]\n\n'
 
     if body.get('stream'):
         return StreamingResponse(stream(), media_type='text/event-stream')
     final = ''
-    async for kind, value in run(job, parts, config):
-        if kind == 'reply':
-            final = value
+    try:
+        async for kind, value in run(job, parts, config):
+            if kind == 'reply':
+                final = value
+    except (httpx.HTTPError, TimeoutError):
+        log.exception('chat completion failed')
+        return JSONResponse({
+            'error': {
+                'message': 'A model or image service failed while processing this request.',
+                'type': 'server_error',
+            },
+        }, status_code=502)
     return JSONResponse({
         'id': 'chatcmpl-' + uuid.uuid4().hex,
         'object': 'chat.completion',

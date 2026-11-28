@@ -15,6 +15,7 @@ class ImageGen:
 
     async def generate(self, prompt):
         wf = json.loads(json.dumps(self.workflow))
+        prompt = 'Illustration only, with no words, text, letters, labels, captions, logos, or watermarks. ' + prompt.strip()
         prompt_inputs = wf[self.prompt_node]['inputs']
         if 'text' in prompt_inputs:
             prompt_inputs['text'] = prompt

@@ -543,6 +543,8 @@ print('stored', len(pieces), 'chunks')
 
 ### 17. ComfyUI
 
+The ComfyUI image uses PyTorch with CUDA 13.0; the host NVIDIA driver must support CUDA 13.0. The current Flux Schnell Q4 model prioritizes speed, and generated text in images may be inaccurate, so keep important labels in the written answer.
+
 ComfyUI docker file - /<Local-Path>/EduAi/comfyUI/Dockerfile
 
 ```bash
@@ -560,7 +562,7 @@ WORKDIR /app
 
 RUN git clone --depth 1 https://github.com/comfyanonymous/ComfyUI.git /app && \
     pip install --no-cache-dir -U pip && \
-    pip install --no-cache-dir torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu126 && \
+    pip install --no-cache-dir torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu130 && \
     pip install --no-cache-dir -r /app/requirements.txt && \
     git clone --depth 1 https://github.com/city96/ComfyUI-GGUF.git /app/custom_nodes/ComfyUI-GGUF && \
     pip install --no-cache-dir -r /app/custom_nodes/ComfyUI-GGUF/requirements.txt

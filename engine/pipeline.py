@@ -1,8 +1,8 @@
 import logging
-import asyncio
 from collections import OrderedDict
 import time
 import hashlib
+import re
 
 log = logging.getLogger('engine')
 
@@ -50,6 +50,9 @@ async def safe(coro, default):
 
 def format_reply(draft, evidence, picture, report):
     text = draft['answer'].strip()
+    if picture:
+        text = re.sub(r"^(?:I (?:cannot|can't|am unable to) (?:draw|generate)[^.]*\.\s*)+", '', text, flags=re.IGNORECASE)
+        text = re.sub(r"^(?:However,\s*)?I can describe[^.]*\.\s*", '', text, flags=re.IGNORECASE)
     if evidence:
         text += '\n\nSources:\n' + '\n'.join('- [' + str(i + 1) + '] ' + e['source'] for i, e in enumerate(evidence))
     if picture:
@@ -76,13 +79,8 @@ async def run(job, parts, config):
         question = await llm.read_picture(job['images'], job['text'])
     if 'retriever' in parts:
         yield 'status', 'Looking in the textbooks...'
-    plan_task = safe(llm.plan(question), {'subject': '', 'wants_picture': False, 'needs_current_facts': False})
-    retrieval_task = (
-        safe(parts['retriever'].search(question, level), [])
-        if 'retriever' in parts
-        else asyncio.sleep(0, result=[])
-    )
-    plan, evidence = await asyncio.gather(plan_task, retrieval_task)
+    plan = await safe(llm.plan(question), {'subject': '', 'wants_picture': False, 'needs_current_facts': False})
+    evidence = await safe(parts['retriever'].search(question, level), []) if 'retriever' in parts else []
     # 3: answer from what it knows
     draft = await llm.answer(question, style, evidence)
     # 4: search the internet, only if needed
@@ -93,16 +91,7 @@ async def run(job, parts, config):
         if found:
             evidence = evidence + found
             draft = await llm.answer(question, style, evidence)
-    # 5: draw a picture, only if needed
-    picture = None
-    wants = plan['wants_picture'] or draft.get('needs_picture')
-    if wants and 'imagegen' in parts:
-        yield 'status', 'Drawing a picture...'
-        await safe(llm.free_gpu(), None)
-        picture = await safe(parts['imagegen'].generate(draft.get('picture_prompt') or question), None)
-    elif plan['wants_picture']:
-        draft['answer'] += '\n\n(Picture generation is switched off.)'
-    # 6: verify, and revise if a check fails
+    # 5: verify, and revise before switching models for image generation
     report = {'passed': True, 'notes': [], 'checks': []}
     if 'verifier' in parts:
         rounds = config['components']['verifier']['max_rounds']
@@ -112,6 +101,14 @@ async def run(job, parts, config):
             if report['passed'] or attempt == rounds:
                 break
             draft = await llm.answer(question, style, evidence, '; '.join(report['notes']))
+    # 6: draw a picture only after all LLM work is complete
+    picture = None
+    wants = plan['wants_picture'] or draft.get('needs_picture')
+    if wants and 'imagegen' in parts:
+        yield 'status', 'Drawing a picture...'
+        picture = await llm.with_gpu_released(parts['imagegen'].generate(draft.get('picture_prompt') or question))
+    elif plan['wants_picture']:
+        draft['answer'] += '\n\n(Picture generation is switched off.)'
     # 7: reply
     reply = format_reply(draft, evidence, picture, report)
     if not job['images'] and not plan['needs_current_facts'] and not wants and report['passed']:

@@ -12,7 +12,7 @@ WORKDIR /app
 
 RUN git clone --depth 1 https://github.com/comfyanonymous/ComfyUI.git /app && \
     pip install --no-cache-dir -U pip && \
-    pip install --no-cache-dir torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu126 && \
+    pip install --no-cache-dir torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu130 && \
     pip install --no-cache-dir -r /app/requirements.txt && \
     git clone --depth 1 https://github.com/city96/ComfyUI-GGUF.git /app/custom_nodes/ComfyUI-GGUF && \
     pip install --no-cache-dir -r /app/custom_nodes/ComfyUI-GGUF/requirements.txt
