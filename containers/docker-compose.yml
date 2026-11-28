@@ -31,14 +31,18 @@ services:
     image: ghcr.io/open-webui/open-webui:main
     container_name: open-webui
     restart: unless-stopped
+    command: ["/bin/bash", "/app/custom-start.sh"]
     ports:
       - 3000:8080
     volumes:
       - ../data/openwebui:/app/backend/data
+      - ../openwebui/custom-start.sh:/app/custom-start.sh:ro
+      - ../logo/logo.png:/app/build/static/favicon.png:ro
     extra_hosts:
       - host.docker.internal:host-gateway
     environment:
       - ENABLE_OLLAMA_API=false
+      - WEBUI_NAME=Pablo1.9.8.2
       - OPENAI_API_KEY=sk-local
       - ENABLE_TITLE_GENERATION=false
       - ENABLE_TAGS_GENERATION=false
