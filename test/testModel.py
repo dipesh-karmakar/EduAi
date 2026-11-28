@@ -6,6 +6,7 @@
 import glob
 from llama_cpp import Llama
 
+# Manual local-model smoke test; requires the configured GGUF file and GPU.
 path = glob.glob('/home/basilisk/Project_EduAi/Source/EduAi/models/qwen3-14b/*Q4_K_M*.gguf')[0]
 
 llm = Llama(model_path=path, n_ctx=8192, n_gpu_layers=-1, flash_attn=True, verbose=False)

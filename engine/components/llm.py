@@ -32,6 +32,7 @@ class LLM:
         self.http = httpx.AsyncClient(timeout=600)
 
     async def complete(self, messages, model=None, schema=None, temperature=0.3, max_tokens=900):
+        # The inference server swaps a single active model, so serialize all calls.
         async with self.infer_lock:
             return await self._complete(messages, model, schema, temperature, max_tokens)
 
@@ -135,6 +136,7 @@ class LLM:
         return str(out.get('final', next(iter(out.values()), '')))
 
     async def with_gpu_released(self, operation):
+        # Keep inference locked while image generation uses the GPU after unloading the chat model.
         async with self.infer_lock:
             await self._complete(
                 [{'role': 'user', 'content': 'hi'}],

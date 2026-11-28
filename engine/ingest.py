@@ -30,16 +30,19 @@ def embed(texts):
 
 
 def chunks(text, size=900, overlap=150):
+    # Overlap keeps phrases near chunk boundaries available to retrieval.
     for start in range(0, len(text), size - overlap):
         yield text[start:start + size]
 
 
+# Extract and retain page numbers so retrieved passages can cite their source page.
 pieces = []
 for page_no, page in enumerate(PdfReader(path).pages, start=1):
     for piece in chunks(page.extract_text() or ''):
         if len(piece.strip()) >= 80:
             pieces.append((piece, page_no))
 
+# Embed bounded batches and attach grade/subject metadata for filtered search.
 for i in range(0, len(pieces), 32):
     batch = pieces[i:i + 32]
     vectors = embed([text for text, _ in batch])

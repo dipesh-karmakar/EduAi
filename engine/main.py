@@ -31,6 +31,7 @@ def models():
 
 
 def split_message(messages):
+    # Convert OpenAI text or multimodal content into the engine's text/image inputs.
     content = messages[-1]['content']
     if isinstance(content, str):
         return content, []
@@ -66,6 +67,7 @@ async def chat(request: Request):
             async for kind, value in run(job, parts, config):
                 yield chunk(model, {'content': ('_' + value + '_\n\n') if kind == 'status' else value})
         except (httpx.HTTPError, TimeoutError):
+            # Headers are already sent; report failures as an SSE event and terminate cleanly.
             log.exception('streaming chat completion failed')
             yield 'data: ' + json.dumps({
                 'error': {

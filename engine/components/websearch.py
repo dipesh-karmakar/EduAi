@@ -22,6 +22,7 @@ class WebSearch:
         self._search_cache_ttl_seconds = 300
 
     async def search(self, question):
+        # Cache by normalized query text to avoid repeating identical network searches.
         key = ' '.join(question.lower().split())
         cached = self._search_cache.get(key)
         if cached is not None:
@@ -34,6 +35,7 @@ class WebSearch:
         r = await self.http.get(self.url, params={'q': question, 'format': 'json'})
         r.raise_for_status()
 
+        # Fetch result pages concurrently and keep snippets if a page cannot be extracted.
         async def fetch(hit):
             try:
                 page = await self.http.get(hit['url'], timeout=10)

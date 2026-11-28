@@ -10,6 +10,7 @@ import llama_cpp.server.model as server_model
 from llama_cpp.llama_chat_format import Qwen3VLChatHandler
 from llama_cpp.server.__main__ import main
 
+# Preserve the refusal field expected by OpenAI-compatible clients.
 _orig_create_chat_completion = llama_cpp.Llama.create_chat_completion
 
 
@@ -28,6 +29,7 @@ _BaseLlamaProxy = server_model.LlamaProxy
 _orig_load = _BaseLlamaProxy.load_llama_from_model_settings
 
 
+# Install the vision handler only while loading Qwen3-VL models.
 class CustomLlamaProxy(_BaseLlamaProxy):
     @staticmethod
     def load_llama_from_model_settings(settings):

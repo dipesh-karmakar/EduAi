@@ -7,6 +7,7 @@ FROM nvidia/cuda:12.6.3-devel-ubuntu24.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
+# Install the CUDA build toolchain required by llama-cpp-python.
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     cmake \
@@ -21,6 +22,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN python3 -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
+# Build llama-cpp-python with CUDA support for the configured GPU architecture.
 RUN pip install --no-cache-dir -U pip && \
     ln -sf /usr/local/cuda/lib64/stubs/libcuda.so /usr/local/cuda/lib64/stubs/libcuda.so.1 && \
     LD_LIBRARY_PATH="/usr/local/cuda/lib64/stubs:${LD_LIBRARY_PATH}" \
@@ -31,4 +33,5 @@ RUN pip install --no-cache-dir -U pip && \
 WORKDIR /app
 EXPOSE 8000
 
+# Start the inference server with the repository's model configuration.
 CMD ["python", "/app/infer/run_server.py", "--config_file", "/app/infer/models.json"]

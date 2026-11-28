@@ -21,6 +21,7 @@ _answer_cache_limit = 256
 _answer_cache_ttl_seconds = 600
 
 
+# Cache keys normalize whitespace and include the learner's level.
 def _cache_key(question, level):
     normalized = ' '.join(question.lower().split())
     digest = hashlib.sha256(normalized.encode()).hexdigest()
@@ -54,6 +55,7 @@ async def safe(coro, default):
     try:
         return await coro
     except Exception as err:
+        # Log component failures while letting the rest of the answer pipeline continue.
         log.warning('component failed: %s', err)
         return default
 

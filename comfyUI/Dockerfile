@@ -8,6 +8,7 @@ FROM python:3.12-slim
 
 ENV DEBIAN_FRONTEND=noninteractive
 
+# Install system libraries required by ComfyUI and its image-processing dependencies.
 RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     libgl1 \
@@ -16,6 +17,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
+# Install ComfyUI, CUDA-enabled PyTorch, and the GGUF custom nodes.
 RUN git clone --depth 1 https://github.com/comfyanonymous/ComfyUI.git /app && \
     pip install --no-cache-dir -U pip && \
     pip install --no-cache-dir torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu130 && \

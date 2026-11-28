@@ -8,6 +8,7 @@
 name: eduai
 
 services:
+  # Supporting services provide search, vector storage, and the browser UI.
   searxng:
     image: searxng/searxng
     container_name: searxng
@@ -45,6 +46,7 @@ services:
       - ENABLE_PERSISTENT_CONFIG=false
       - OPENAI_API_BASE_URL=http://engine:9000/v1
 
+  # GPU-backed model and image services; model and output files persist on the host.
   infer:
     build: ../infer
     container_name: infer
@@ -67,6 +69,7 @@ services:
     ports:
       - 127.0.0.1:8188:8188
 
+  # Public API orchestrates the model and supporting services on the Compose network.
   engine:
     build: ../engine
     container_name: engine

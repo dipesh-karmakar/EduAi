@@ -13,6 +13,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'engine'))
 from pipeline import run
 
 
+# These fakes isolate subject routing from model and database services.
 class FakeLLM:
     async def plan(self, question):
         return {
@@ -41,6 +42,7 @@ class PipelineSubjectRoutingTests(unittest.IsolatedAsyncioTestCase):
         job = {'text': 'Test subject routing for physics', 'images': [], 'level': 'class-9-12'}
         config = {'levels': {'class-9-12': 'Use suitable detail.'}}
 
+        # Run the async pipeline and verify the planner's subject reaches retrieval.
         async for _ in run(job, parts, config):
             pass
 

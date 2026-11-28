@@ -8,6 +8,7 @@ import importlib
 
 def load(config):
     parts = {}
+    # Preserve configuration order so components can receive earlier dependencies.
     for name, cfg in config['components'].items():
         if cfg.get('enabled', False):
             module = importlib.import_module('components.' + name)

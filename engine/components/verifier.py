@@ -22,6 +22,7 @@ class Verifier:
     async def check(self, question, level, draft, evidence):
         notes, passed = [], []
         answer = draft['answer']
+        # Recompute the final expression and compare it with numbers in the written answer.
         expr = draft.get('final_expression', '').replace('^', '**')
         if expr:
             try:
@@ -33,6 +34,7 @@ class Verifier:
                     notes.append('the calculation gives ' + str(round(value, 4)) + ', which the answer does not state')
             except Exception:
                 notes.append('the final calculation could not be evaluated')
+        # Only ask for source-support checks when retrieved evidence is available.
         if evidence:
             schema = {'type': 'object', 'properties': {'unsupported': {'type': 'array', 'items': {'type': 'string'}}}, 'required': ['unsupported']}
             sources = '\n\n'.join(e['text'] for e in evidence)
@@ -42,6 +44,7 @@ class Verifier:
                 notes.append('not supported by the sources: ' + '; '.join(out['unsupported'][:3]))
             else:
                 passed.append('claims matched to sources')
+        # Repeated model samples are optional because they add inference cost.
         if expr and self.samples > 0:
             finals = [await self.llm.short_final(answer)]
             for _ in range(self.samples):

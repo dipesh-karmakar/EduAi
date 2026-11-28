@@ -16,6 +16,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'engine'))
 from components.retriever import Retriever
 
 
+# Mimic only the Qdrant point fields used to build returned evidence.
 def point(score=0.9):
     return SimpleNamespace(
         payload={'source': 'physics.pdf', 'page': 3, 'text': 'Gravity evidence'},
@@ -42,6 +43,7 @@ class RetrieverSearchTests(unittest.IsolatedAsyncioTestCase):
     async def test_filters_by_level_and_normalized_subject(self):
         retriever = self.make_retriever([[point()]])
 
+        # A subject match should constrain the vector query without broadening it.
         results = await retriever.search('What is gravity?', 'class-9-12', ' Physics ')
 
         self.assertEqual(len(results), 1)
@@ -52,6 +54,7 @@ class RetrieverSearchTests(unittest.IsolatedAsyncioTestCase):
     async def test_falls_back_to_level_filter_when_subject_has_no_good_matches(self):
         retriever = self.make_retriever([[point(score=0.2)], [point()]])
 
+        # Low-scoring subject results trigger the broader grade-level query.
         results = await retriever.search('What is gravity?', 'class-9-12', 'physics')
 
         self.assertEqual(len(results), 1)

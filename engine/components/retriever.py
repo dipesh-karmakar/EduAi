@@ -35,6 +35,7 @@ class Retriever:
         cache_key = ' '.join(question.lower().split())
         vector = self._embedding_cache.get(cache_key)
         if vector is None:
+            # Embedding and chat requests share a model server, so serialize alias changes.
             async with self.infer_lock:
                 r = await self.http.post(self.embed_url, json={'model': self.embed_model, 'input': [question]})
                 r.raise_for_status()
@@ -49,6 +50,7 @@ class Retriever:
         level_condition = FieldCondition(key='level', match=MatchValue(value=level))
         subject = subject.strip().casefold() if isinstance(subject, str) else ''
         if subject:
+            # Prefer subject-specific evidence; use the wider level pool only if needed.
             subject_filter = Filter(must=[
                 level_condition,
                 FieldCondition(key='subject', match=MatchValue(value=subject)),
