@@ -1,4 +1,5 @@
 import logging
+import asyncio
 
 log = logging.getLogger('engine')
 
@@ -33,15 +34,19 @@ async def run(job, parts, config):
     if job['images']:
         yield 'status', 'Reading your picture...'
         question = await llm.read_picture(job['images'], job['text'])
-    plan = await safe(llm.plan(question), {'subject': '', 'wants_picture': False, 'needs_current_facts': False})
-    # 3: answer from what it knows
-    evidence = []
     if 'retriever' in parts:
         yield 'status', 'Looking in the textbooks...'
-        evidence = await safe(parts['retriever'].search(question, level), [])
+    plan_task = safe(llm.plan(question), {'subject': '', 'wants_picture': False, 'needs_current_facts': False})
+    retrieval_task = (
+        safe(parts['retriever'].search(question, level), [])
+        if 'retriever' in parts
+        else asyncio.sleep(0, result=[])
+    )
+    plan, evidence = await asyncio.gather(plan_task, retrieval_task)
+    # 3: answer from what it knows
     draft = await llm.answer(question, style, evidence)
     # 4: search the internet, only if needed
-    weak = (not evidence) or (not draft['confident']) or plan['needs_current_facts']
+    weak = (not draft['confident']) or plan['needs_current_facts']
     if weak and 'websearch' in parts:
         yield 'status', 'Searching the web...'
         found = await safe(parts['websearch'].search(question), [])

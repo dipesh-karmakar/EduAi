@@ -27,9 +27,12 @@ class ImageGen:
         r = await self.http.post(self.url + '/prompt', json={'prompt': wf})
         r.raise_for_status()
         pid = r.json()['prompt_id']
+        deadline = asyncio.get_running_loop().time() + 300
         while True:
-            await asyncio.sleep(2)
-            history = (await self.http.get(self.url + '/history/' + pid)).json()
+            await asyncio.sleep(1)
+            if asyncio.get_running_loop().time() >= deadline:
+                raise TimeoutError('ComfyUI image generation timed out')
+            history = (await self.http.get(self.url + '/history/' + pid, timeout=30)).json()
             if pid in history:
                 break
         image = next(i for node in history[pid]['outputs'].values() for i in node.get('images', []))

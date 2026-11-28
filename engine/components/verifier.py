@@ -36,7 +36,7 @@ class Verifier:
                 notes.append('not supported by the sources: ' + '; '.join(out['unsupported'][:3]))
             else:
                 passed.append('claims matched to sources')
-        if expr or not evidence:
+        if expr and self.samples > 0:
             finals = [await self.llm.short_final(answer)]
             for _ in range(self.samples):
                 again = await self.llm.answer(question, self.styles[level], evidence, temperature=0.7)
