@@ -1,7 +1,43 @@
 import logging
 import asyncio
+from collections import OrderedDict
+import time
+import hashlib
 
 log = logging.getLogger('engine')
+
+_answer_cache = OrderedDict()
+_answer_cache_limit = 256
+_answer_cache_ttl_seconds = 600
+
+
+def _cache_key(question, level):
+    normalized = ' '.join(question.lower().split())
+    digest = hashlib.sha256(normalized.encode()).hexdigest()
+    return level, digest
+
+
+def _get_cached_answer(question, level, allow_cache):
+    if not allow_cache:
+        return None
+    key = _cache_key(question, level)
+    item = _answer_cache.get(key)
+    if item is None:
+        return None
+    answer, expires_at = item
+    if expires_at <= time.monotonic():
+        _answer_cache.pop(key, None)
+        return None
+    _answer_cache.move_to_end(key)
+    return answer
+
+
+def _set_cached_answer(question, level, answer):
+    key = _cache_key(question, level)
+    _answer_cache[key] = (answer, time.monotonic() + _answer_cache_ttl_seconds)
+    _answer_cache.move_to_end(key)
+    while len(_answer_cache) > _answer_cache_limit:
+        _answer_cache.popitem(last=False)
 
 
 async def safe(coro, default):
@@ -31,6 +67,10 @@ async def run(job, parts, config):
     style = config['levels'][level]
     # 1 and 2: receive and understand
     question = job['text']
+    cached = _get_cached_answer(question, level, not job['images'])
+    if cached is not None:
+        yield 'reply', cached
+        return
     if job['images']:
         yield 'status', 'Reading your picture...'
         question = await llm.read_picture(job['images'], job['text'])
@@ -73,4 +113,7 @@ async def run(job, parts, config):
                 break
             draft = await llm.answer(question, style, evidence, '; '.join(report['notes']))
     # 7: reply
-    yield 'reply', format_reply(draft, evidence, picture, report)
+    reply = format_reply(draft, evidence, picture, report)
+    if not job['images'] and not plan['needs_current_facts'] and not wants and report['passed']:
+        _set_cached_answer(question, level, reply)
+    yield 'reply', reply
